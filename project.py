@@ -9,7 +9,7 @@ import random, string
 
 from sqlalchemy import create_engine, asc
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant, MenuItem
+from database_setup import Base, Restaurant, MenuItem, User
 
 from oauth2client.client import flow_from_clientsecrets
 from oauth2client.client import FlowExchangeError
@@ -283,7 +283,7 @@ def editMenuItem(restaurant_id, menu_id):
 def deleteMenuItem(restaurant_id,menu_id):
     if 'username' not in login_session:
       return redirect('/login')
-      
+
     restaurant = session.query(Restaurant).filter_by(id = restaurant_id).one()
     itemToDelete = session.query(MenuItem).filter_by(id = menu_id).one() 
     if request.method == 'POST':
