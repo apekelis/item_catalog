@@ -4,8 +4,16 @@
 			<span class="glyphicon glyphicon-home" aria-hidden="true"></span>Show All Restaurants
 		</a>
 	</div>
-	<div class="col-md-6 text-right">
-					<p>Login Link will go Here </p>
-		
+	<div class="col-md-offset-1 text-right">
+					{% if user is defined %}
+					<p><figure class="user">
+							<img src="{{ user.picture}}" alt="image" height="100" width="100">
+							<figcaption>{{ user.name }}</figcaption>
+						</figure></p> 
+					<p><a href = "{{url_for('showLogout')}}">Logout</a></p>
+		            {% else %}
+		            <a href="{{url_for('showLogin')}}">Log in </a>
+		            {% endif %}
+		</div>
 	</div>
 </div>
