@@ -10,7 +10,7 @@
 							<img src="{{ user.picture}}" alt="image" height="100" width="100">
 							<figcaption>{{ user.name }}</figcaption>
 						</figure></p> 
-					<p><a href = "{{url_for('showLogout')}}">Logout</a></p>
+					<p><a href = "{{url_for('disconnect')}}">Logout</a></p>
 		            {% else %}
 		            <a href="{{url_for('showLogin')}}">Log in </a>
 		            {% endif %}
