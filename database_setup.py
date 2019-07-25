@@ -24,8 +24,8 @@ class User(Base):
            'picture'      : self.picture,
        }
 
-class Restaurant(Base):
-    __tablename__ = 'restaurant'
+class Category(Base):
+    __tablename__ = 'category'
    
     id = Column(Integer, primary_key=True)
     name = Column(String(250), nullable=False)
@@ -38,19 +38,18 @@ class Restaurant(Base):
        return {
            'name'         : self.name,
            'id'           : self.id,
+           'creator id'      : self.user_id
        }
  
-class MenuItem(Base):
-    __tablename__ = 'menu_item'
+class ListItem(Base):
+    __tablename__ = 'list_item'
 
 
     name =Column(String(80), nullable = False)
     id = Column(Integer, primary_key = True)
     description = Column(String(250))
-    price = Column(String(8))
-    course = Column(String(250))
-    restaurant_id = Column(Integer,ForeignKey('restaurant.id'))
-    restaurant = relationship(Restaurant)
+    category_id = Column(Integer,ForeignKey('category.id'))
+    category = relationship(Category)
     user_id = Column(Integer,ForeignKey('user.id'))
     user = relationship(User)
 
@@ -59,16 +58,15 @@ class MenuItem(Base):
     def serialize(self):
        """Return object data in easily serializeable format"""
        return {
-           'name'         : self.name,
-           'description'         : self.description,
-           'id'         : self.id,
-           'price'         : self.price,
-           'course'         : self.course,
-       }
+           'name'          : self.name,
+           'description'   : self.description,
+           'id'            : self.id,
+           'creator id'    : self.user_id
+      }
 
 
 
-engine = create_engine('sqlite:///restaurantmenuwithusers.db')
+engine = create_engine('sqlite:///itemcatalog.db')
  
 
 Base.metadata.create_all(engine)
