@@ -40,4 +40,6 @@ Type **ls** to ensure that you are inside the directory that contains catalog.py
 
 Now type **python database_setup.py** to initialize the database.
 
-Type **python catalog.py** to run the Flask web server. In your browser visit **http://localhost:8000** to view the item catalog app.  You should be able to view, add, edit, and delete catalog items and sub items.
+Type **python database_fill_in.py** to populate the database with some categories and items. (Optional)
+
+Type **python catalog.py** to run the Flask web server. In your browser visit **http://localhost:8000** to view the item catalog app.  You should be able to view categories and items, and after loggin in you can also add, edit, and delete the items you created.
