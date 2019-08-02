@@ -320,7 +320,7 @@ def editCategory(category_id):
             return render_template('editCategory.html', category = editedCategory, user=getUserInfo(login_session['user_id']))
 
 
-#Delete a restaurant
+#Delete a category
 @app.route('/categories/<int:category_id>/delete/', methods = ['GET','POST'])
 def deleteCategory(category_id):
     if 'username' not in login_session:
@@ -359,19 +359,83 @@ def showItems(category_id):
         return render_template('pubitems.html', items = items, category = category, creator = creator)
 
 
-@app.route('/categories/<int:category_id>/items/new')
+# Create New Item in the Category
+@app.route('/categories/<int:category_id>/items/new', methods = ['GET', 'POST'])
 def newListItem(category_id):
-    return ''
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    category = session.query(Category).filter_by(id = category_id).one()
+
+    if category.user_id != login_session['user_id']:
+        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        return redirect(url_for('showItems', category_id = category.id))
+    if request.method == 'POST':
+        if "btn_new" in request.form:
+            newItem = ListItem(name = request.form['name'], description = request.form['description'], category_id = category_id, user_id = login_session['user_id'])
+            session.add(newItem)
+            session.commit()
+            flash('New Catalog Item: %s Successfully Created' % (newItem.name))
+            return redirect(url_for('showItems', category_id = category_id))
+        else:
+        	return redirect(url_for('showItems', category_id = category_id))
+    else:
+        return render_template('newitem.html', category_id = category_id, user=getUserInfo(login_session['user_id']))
 
 
-@app.route('/categories/<int:category_id>/items/<int:item_id>/edit')
+# Edit an Item in the Category
+@app.route('/categories/<int:category_id>/items/<int:item_id>/edit', methods = ['GET', 'POST'])
 def editListItem(category_id, item_id):
-    return ''
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    editedItem = session.query(ListItem).filter_by(id = item_id).one()
+    category = session.query(Category).filter_by(id = category_id).one()
+    
+    if category.user_id != login_session['user_id']:
+        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        return redirect(url_for('showItems', category_id = category.id))
+  
+    if request.method == 'POST':
+        if "btn_edit" in request.form:
+            if request.form['name']:
+                editedItem.name = request.form['name']
+            if request.form['description']:
+                editedItem.description = request.form['description']
+            session.add(editedItem)
+            session.commit() 
+            flash('Catalog Item Successfully Edited')
+            return redirect(url_for('showItems', category_id = category_id))
+        else:
+        	return redirect(url_for('showItems', category_id = category_id))
+    else:
+        return render_template('edititem.html', item = editedItem, user=getUserInfo(login_session['user_id']))
 
 
-@app.route('/categories/<int:category_id>/items/<int:item_id>/delete')
+# Delete an Item in the Category
+@app.route('/categories/<int:category_id>/items/<int:item_id>/delete', methods = ['GET', 'POST'])
 def deleteListItem(category_id, item_id):
-    return ''
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    category = session.query(Category).filter_by(id = category_id).one()
+    itemToDelete = session.query(ListItem).filter_by(id = item_id).one() 
+    
+    if category.user_id != login_session['user_id']:
+        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        return redirect(url_for('showItems', category_id = category.id))
+  
+    if request.method == 'POST':
+    	if "btn_delete" in request.form:
+            session.delete(itemToDelete)
+            session.commit()
+            flash('Catalog Item Successfully Deleted')
+            return redirect(url_for('showItems', category_id = category_id))
+        else:
+        	return redirect(url_for('showItems', category_id = category_id))
+    else:
+        return render_template('deleteitem.html', item = itemToDelete, user=getUserInfo(login_session['user_id']))
+
 
 
 # Show Login page
@@ -414,6 +478,10 @@ def disconnect():
 #     return redirect('/login')
 
 
+
+# Pending JSON ENDPOINTS!!!!
+# AND CODE FORMATING WITH pycodestyle
+#
 # Start web-server using a non-threaded server because otherwise i had
 # problems with SQLite
 if __name__ == '__main__':
