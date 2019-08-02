@@ -31,17 +31,33 @@
 <body>  
 
 
+
+
+<div class="col-md-4 category-list">      
+<p> <h2> Select your account provider:</h2></p>
+
 <!-- GOOGLE PLUS SIGN IN BUTTON-->
 
-<br>      
-<button id="signinButton" class="buttontest">
+<button id="signinButton">
     <img src="/static/google.jpg" alt="Image" height="20" width="20"/>Google Sign in
 </button>
 
+<br>  
+
+<!-- FACEBOOK SIGN IN BUTTON-->
+
+<fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+<a href='javascript:sendTokenToServer()'>Login with Facebook</a>
+
+</fb:login-button>
+
+</div>
 
 
 
 <div id="result"></div>
+
+<!-- GOOGLE PLUS SIGN IN -->
 
 <script>
   $('#signinButton').click(function() {
@@ -74,9 +90,6 @@
   });
 </script>
 
-
-
-<!--END GOOGLE PLUS SIGN IN BUTTON -->
 
 <!--END GOOGLE PLUS SIGN IN -->
 
@@ -116,7 +129,7 @@
       success: function(result) {
         // Handle or verify the server response if necessary.
         if (result) {
-          $('#result').html('Login Successful!</br>'+ result + '</br>Redirecting...')
+          $('#result').html('Login Successful!</br>'+ result + '<br>Redirecting...<br><br>')
          setTimeout(function() {
           window.location.href = "/categories";
          }, 4000);
@@ -132,16 +145,8 @@
 </script>
 
 
-<button class="buttontest">
       
 
-          <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
-<a href='javascript:sendTokenToServer()'>Login with Facebook</a>
-
-</fb:login-button>
-
-      
-        </button>
 <!--END FACEBOOK SIGN IN -->
 
 

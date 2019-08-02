@@ -43,31 +43,30 @@ def fbconnect():
         return response
     access_token = request.data
     print "access token received %s " % access_token
-
-
     app_id = FB_CLIENT_ID
     app_secret = json.loads(
         open('fb_client_secrets.json', 'r').read())['web']['app_secret']
-    url = 'https://graph.facebook.com/oauth/access_token?grant_type=fb_exchange_token&client_id=%s&client_secret=%s&fb_exchange_token=%s' % (
-        app_id, app_secret, access_token)
+    url = 'https://graph.facebook.com/oauth/access_token?'
+    url += 'grant_type=fb_exchange_token&client_id=%s&' % (app_id)
+    url += 'client_secret=%s&fb_exchange_token=%s' % (app_secret, access_token)
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
-
-
     # Use token to get user info from API
     userinfo_url = "https://graph.facebook.com/v2.8/me"
     '''
-        Due to the formatting for the result from the server token exchange we have to
-        split the token first on commas and select the first index which gives us the key : value
-        for the server access token then we split it on colons to pull out the actual token value
-        and replace the remaining quotes with nothing so that it can be used directly in the graph
-        api calls
+        Due to the formatting for the result from the server token exchange we
+        have to split the token first on commas and select the first index
+        which gives us the key : value for the server access token then we
+        split it on colons to pull out the actual token value and replace the
+        remaining quotes with nothing so that it can be used directly in the
+        graph api calls
     '''
     token = result.split(',')[0].split(':')[1].replace('"', '')
-
-    url = 'https://graph.facebook.com/v2.8/me?access_token=%s&fields=name,id,email' % token
+    url = 'https://graph.facebook.com/v2.8/me'
+    url += '?access_token=%s&fields=name,id,email' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
+
     # print "url sent for API access:%s"% url
     # print "API JSON result: %s" % result
     data = json.loads(result)
@@ -80,11 +79,11 @@ def fbconnect():
     login_session['access_token'] = token
 
     # Get user picture
-    url = 'https://graph.facebook.com/v2.8/me/picture?access_token=%s&redirect=0&height=200&width=200' % token
+    url = 'https://graph.facebook.com/v2.8/me/picture?access_token='
+    url += '%s&redirect=0&height=200&width=200' % token
     h = httplib2.Http()
     result = h.request(url, 'GET')[1]
     data = json.loads(result)
-
     login_session['picture'] = data["data"]["url"]
 
     # see if user exists
@@ -92,16 +91,14 @@ def fbconnect():
     if not user_id:
         user_id = createUser(login_session)
     login_session['user_id'] = user_id
-
     output = ''
     output += '<h1>Welcome, '
     output += login_session['username']
-
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
-
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;'
+    output += '-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("Now logged in as %s" % login_session['username'])
     return output
 
@@ -281,6 +278,102 @@ def showCategories():
         return render_template('pubcategories.html', categories=categories)
 
 
+#Create new category
+@app.route('/categories/new', methods=['GET','POST'])
+def newCategory():
+    if 'username' not in login_session:
+        return redirect('/login')
+    if request.method == 'POST':
+    	if "btn_new" in request.form:
+            newCategory = Category(name = request.form['name'], user_id = login_session['user_id'])
+            session.add(newCategory)
+            flash('New Category %s Successfully Created' % newCategory.name)
+            session.commit()
+            return redirect(url_for('showCategories'))
+        else:
+        	return redirect(url_for('showCategories'))
+    else:
+        return render_template('newCategory.html', user=getUserInfo(login_session['user_id']))
+ 
+#Edit a category
+@app.route('/categories/<int:category_id>/edit/', methods = ['GET', 'POST'])
+def editCategory(category_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+  
+    editedCategory = session.query(Category).filter_by(id = category_id).one()
+    if editedCategory.user_id != login_session['user_id']:
+        flash('You are not the creator of %s category, and cannot modify it' % editedCategory.name)
+        return redirect(url_for('showCategories'))
+    else:
+        if request.method == 'POST':
+            if "btn_edit" in request.form:
+                if request.form['name']:
+                    editedCategory.name = request.form['name']
+                    flash('Category Successfully Edited %s' % editedCategory.name)
+                    return redirect(url_for('showCategories'))
+                else:
+                    return redirect(url_for('showCategories'))	
+            else:
+            	return redirect(url_for('showCategories'))
+        else:
+            return render_template('editCategory.html', category = editedCategory, user=getUserInfo(login_session['user_id']))
+
+
+#Delete a restaurant
+@app.route('/categories/<int:category_id>/delete/', methods = ['GET','POST'])
+def deleteCategory(category_id):
+    if 'username' not in login_session:
+        return redirect('/login')
+
+    categoryToDelete = session.query(Category).filter_by(id = category_id).one()
+    if categoryToDelete.user_id != login_session['user_id']:
+        flash('You are not the creator of %s category, and cannot modify it' % categoryToDelete.name)
+        return redirect(url_for('showCategories'))    
+    else:
+        if request.method == 'POST':
+            if "btn_delete" in request.form:
+                session.delete(categoryToDelete)
+                flash('%s Successfully Deleted' % categoryToDelete.name)
+                session.commit()
+                return redirect(url_for('showCategories'))
+            else:
+                return redirect(url_for('showCategories'))	
+        else:
+            return render_template('deleteCategory.html',category = categoryToDelete, user=getUserInfo(login_session['user_id']))
+
+
+#Show Items page
+@app.route('/categories/<int:category_id>/')
+@app.route('/categories/<int:category_id>/items')
+def showItems(category_id):
+    category = session.query(Category).filter_by(id = category_id).one()
+    items = session.query(ListItem).filter_by(category_id = category_id).all()
+    creator = getUserInfo(category.user_id)
+    if 'user_id' in login_session: 
+        if category.user_id != login_session['user_id']:
+            return render_template('pubitems.html', items = items, category = category, creator = creator, user=getUserInfo(login_session['user_id']))
+        else:
+            return render_template('items.html', items = items, category = category, user=getUserInfo(login_session['user_id']))
+    else:
+        return render_template('pubitems.html', items = items, category = category, creator = creator)
+
+
+@app.route('/categories/<int:category_id>/items/new')
+def newListItem(category_id):
+    return ''
+
+
+@app.route('/categories/<int:category_id>/items/<int:item_id>/edit')
+def editListItem(category_id, item_id):
+    return ''
+
+
+@app.route('/categories/<int:category_id>/items/<int:item_id>/delete')
+def deleteListItem(category_id, item_id):
+    return ''
+
+
 # Show Login page
 @app.route('/login')
 def showLogin():
@@ -319,26 +412,6 @@ def disconnect():
 # Code to prevent users from entering a page without logging in
 # if 'username' not in login_session:
 #     return redirect('/login')
-#
-
-
-@app.route('/categories/<int:category_id>/')
-@app.route('/categories/<int:category_id>/items')
-def showItems(category_id):
-    return ''
-
-@app.route('/categories/new', methods=['GET','POST'])
-def newCategory():
-  if 'username' not in login_session:
-      return redirect('/login')
-  if request.method == 'POST':
-      newCategory = Category(name = request.form['name'], user_id = login_session['user_id'])
-      session.add(newCategory)
-      flash('New Category %s Successfully Created' % newCategory.name)
-      session.commit()
-      return redirect(url_for('showCategories'))
-  else:
-      return render_template('newCategory.html', user=getUserInfo(login_session['user_id']))
 
 
 # Start web-server using a non-threaded server because otherwise i had
