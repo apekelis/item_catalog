@@ -1,5 +1,7 @@
 # Item Catalog Project
 2nd Project in FSWD Udacity course
+
+Created from the repository in the oauth2 udacity course into a new repository (That's why there are all the previous commits before the start of the project)
 # Tools needed to run project
 
 ### VirtualBox
