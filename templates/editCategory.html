@@ -14,7 +14,7 @@
 			<form action="{{ url_for('editCategory',category_id = category.id)}}" method = "post">
 				<div class="form-group">
 					<label for="name">Name:</label>
-					<input type ="text" class="form-control" name="name" value="{{category.name }}">
+					<input type ="text" class="form-control" name="name" value="{{category.name }}" required>
 					<div class="padding-bottom"></div>
 					<button class="btn btn-default" name="btn_edit" type="submit">
 					<span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Save</button>

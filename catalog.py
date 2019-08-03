@@ -24,7 +24,7 @@ GO_CLIENT_ID = json.loads(
     open('go_client_secrets.json', 'r').read())['web']['client_id']
 
 FB_CLIENT_ID = json.loads(open('fb_client_secrets.json', 'r').read())[
-        'web']['app_id']
+    'web']['app_id']
 
 
 # Connect to Database and create database session
@@ -115,17 +115,20 @@ def gconnect():
     try:
 
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets('go_client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets(
+            'go_client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
+        response = make_response(json.dumps(
+            'Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
     # Check that the access token is valid
     access_token = credentials.access_token
-    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' % access_token)
+    url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s' %
+           access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
 
@@ -234,7 +237,8 @@ def fbdisconnect():
         gdisconnect()
         del login_session['gplus_id']
 
-    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (facebook_id, access_token)
+    url = 'https://graph.facebook.com/%s/permissions?access_token=%s' % (
+        facebook_id, access_token)
     h = httplib2.Http()
     result = h.request(url, 'DELETE')[1]
     return "you have been logged out"
@@ -261,7 +265,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(json.dumps(
+            'Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -271,7 +276,8 @@ def gdisconnect():
 def categoryItemsJSON(category_id):
     try:
         category = session.query(Category).filter_by(id=category_id).one()
-        items = session.query(ListItem).filter_by(category_id=category_id).all()
+        items = session.query(ListItem).filter_by(
+            category_id=category_id).all()
         return jsonify(ListItems=[i.serialize for i in items])
     except Exception as e:
         return '''There was a problem with your query %s, please Verify, Redirecting to main page...
@@ -284,7 +290,8 @@ def categoryItemsJSON(category_id):
 @app.route('/categories/<int:category_id>/items/<int:item_id>/JSON')
 def listItemJSON(category_id, item_id):
     try:
-        List_Item = session.query(ListItem).filter_by(id=item_id, category_id=category_id).one()
+        List_Item = session.query(ListItem).filter_by(
+            id=item_id, category_id=category_id).one()
         return jsonify(List_Item=List_Item.serialize)
     except Exception as e:
         return '''There was a problem with your query %s, please Verify, Redirecting to main page...
@@ -326,7 +333,8 @@ def newCategory():
         return redirect('/login')
     if request.method == 'POST':
         if "btn_new" in request.form:
-            newCategory = Category(name=request.form['name'], user_id=login_session['user_id'])
+            newCategory = Category(
+                name=request.form['name'], user_id=login_session['user_id'])
             session.add(newCategory)
             flash('New Category %s Successfully Created' % newCategory.name)
             session.commit()
@@ -345,14 +353,16 @@ def editCategory(category_id):
 
     editedCategory = session.query(Category).filter_by(id=category_id).one()
     if editedCategory.user_id != login_session['user_id']:
-        flash('You are not the creator of %s category, and cannot modify it' % editedCategory.name)
+        flash('You are not the creator of %s category, and cannot modify it' %
+              editedCategory.name)
         return redirect(url_for('showCategories'))
     else:
         if request.method == 'POST':
             if "btn_edit" in request.form:
                 if request.form['name']:
                     editedCategory.name = request.form['name']
-                    flash('Category Successfully Edited %s' % editedCategory.name)
+                    flash('Category Successfully Edited %s' %
+                          editedCategory.name)
                     return redirect(url_for('showCategories'))
                 else:
                     return redirect(url_for('showCategories'))
@@ -370,7 +380,8 @@ def deleteCategory(category_id):
 
     categoryToDelete = session.query(Category).filter_by(id=category_id).one()
     if categoryToDelete.user_id != login_session['user_id']:
-        flash('You are not the creator of %s category, and cannot modify it' % categoryToDelete.name)
+        flash('You are not the creator of %s category, and cannot modify it' %
+              categoryToDelete.name)
         return redirect(url_for('showCategories'))
     else:
         if request.method == 'POST':
@@ -410,11 +421,13 @@ def newListItem(category_id):
     category = session.query(Category).filter_by(id=category_id).one()
 
     if category.user_id != login_session['user_id']:
-        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        flash('You are not the creator of %s category, and cannot modify it' %
+              category.name)
         return redirect(url_for('showItems', category_id=category.id))
     if request.method == 'POST':
         if "btn_new" in request.form:
-            newItem = ListItem(name=request.form['name'], description=request.form['description'], category_id=category_id, user_id=login_session['user_id'])
+            newItem = ListItem(name=request.form['name'], description=request.form['description'],
+                               category_id=category_id, user_id=login_session['user_id'])
             session.add(newItem)
             session.commit()
             flash('New Catalog Item: %s Successfully Created' % (newItem.name))
@@ -435,7 +448,8 @@ def editListItem(category_id, item_id):
     category = session.query(Category).filter_by(id=category_id).one()
 
     if category.user_id != login_session['user_id']:
-        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        flash('You are not the creator of %s category, and cannot modify it' %
+              category.name)
         return redirect(url_for('showItems', category_id=category.id))
 
     if request.method == 'POST':
@@ -464,7 +478,8 @@ def deleteListItem(category_id, item_id):
     itemToDelete = session.query(ListItem).filter_by(id=item_id).one()
 
     if category.user_id != login_session['user_id']:
-        flash('You are not the creator of %s category, and cannot modify it' % category.name)
+        flash('You are not the creator of %s category, and cannot modify it' %
+              category.name)
         return redirect(url_for('showItems', category_id=category.id))
 
     if request.method == 'POST':
@@ -486,7 +501,8 @@ def showLogin():
         print "already logged in"
         flash("You are already logged in, logout first in order to re-login.")
         return redirect(url_for('showCategories'))
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
