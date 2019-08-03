@@ -37,6 +37,8 @@ session = DBSession()
 
 @app.route('/fbconnect', methods=['POST'])
 def fbconnect():
+    """Handles Facebook login handshake."""
+
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter.'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -105,6 +107,8 @@ def fbconnect():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """Handles Google sign in Oauth2 handshake."""
+
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state'), 401)
         response.headers['Content-Type'] = 'application/json'
@@ -201,6 +205,8 @@ def gconnect():
 
 
 def createUser(login_session):
+    """Creates a user in the database, with the "login_session" information."""
+
     newUser = User(name=login_session['username'], email=login_session[
                    'email'], picture=login_session['picture'])
     session.add(newUser)
@@ -210,11 +216,15 @@ def createUser(login_session):
 
 
 def getUserInfo(user_id):
+    """Gets a User information from the database using his ID."""
+
     user = session.query(User).filter_by(id=user_id).one()
     return user
 
 
 def getUserID(email):
+    """Gets a User ID from the database, using his email."""
+
     try:
         user = session.query(User).filter_by(email=email).one()
         return user.id
@@ -224,6 +234,8 @@ def getUserID(email):
 
 @app.route('/fbdisconnect')
 def fbdisconnect():
+    """Handles Facebook account logout."""
+
     facebook_id = login_session['facebook_id']
     # The access token must me included to successfully logout
     access_token = login_session['access_token']
@@ -246,6 +258,8 @@ def fbdisconnect():
 
 @app.route('/gdisconnect')
 def gdisconnect():
+    """Handles Google account logout"""
+
     # Only disconnect a connected user.
     access_token = login_session.get('access_token')
     if access_token is None:
@@ -274,6 +288,8 @@ def gdisconnect():
 # JSON API ENDPOINTS for Categories and Items
 @app.route('/categories/<int:category_id>/items/JSON')
 def categoryItemsJSON(category_id):
+    """Generates JSON endpoint for a Category, listing all its items."""
+
     try:
         category = session.query(Category).filter_by(id=category_id).one()
         items = session.query(ListItem).filter_by(
@@ -289,6 +305,8 @@ def categoryItemsJSON(category_id):
 
 @app.route('/categories/<int:category_id>/items/<int:item_id>/JSON')
 def listItemJSON(category_id, item_id):
+    """Generates JSON endpoint for a specific item in a category."""
+
     try:
         List_Item = session.query(ListItem).filter_by(
             id=item_id, category_id=category_id).one()
@@ -303,6 +321,8 @@ def listItemJSON(category_id, item_id):
 
 @app.route('/categories/JSON')
 def categoriesJSON():
+    """Generates JSON endpoint with a list of all categories."""
+
     try:
         categories = session.query(Category).all()
         return jsonify(categories=[r.serialize for r in categories])
@@ -318,6 +338,8 @@ def categoriesJSON():
 @app.route('/')
 @app.route('/categories/')
 def showCategories():
+    """Shows main page with a list of all categories."""
+
     categories = session.query(Category).order_by(asc(Category.name))
     if 'user_id' in login_session:
         return render_template('categories.html', categories=categories,
@@ -329,6 +351,8 @@ def showCategories():
 # Create new category
 @app.route('/categories/new', methods=['GET', 'POST'])
 def newCategory():
+    """Creates a new category."""
+
     if 'username' not in login_session:
         return redirect('/login')
     if request.method == 'POST':
@@ -348,6 +372,8 @@ def newCategory():
 # Edit a category
 @app.route('/categories/<int:category_id>/edit/', methods=['GET', 'POST'])
 def editCategory(category_id):
+    """Edits an existing category."""
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -375,6 +401,8 @@ def editCategory(category_id):
 # Delete a category
 @app.route('/categories/<int:category_id>/delete/', methods=['GET', 'POST'])
 def deleteCategory(category_id):
+    """Deletes an existing category."""
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -400,6 +428,8 @@ def deleteCategory(category_id):
 @app.route('/categories/<int:category_id>/')
 @app.route('/categories/<int:category_id>/items')
 def showItems(category_id):
+    """Shows all items associated to a category."""
+
     category = session.query(Category).filter_by(id=category_id).one()
     items = session.query(ListItem).filter_by(category_id=category_id).all()
     creator = getUserInfo(category.user_id)
@@ -415,6 +445,8 @@ def showItems(category_id):
 # Create New Item in the Category
 @app.route('/categories/<int:category_id>/items/new', methods=['GET', 'POST'])
 def newListItem(category_id):
+    """Creates an item for a specific category."""
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -441,6 +473,8 @@ def newListItem(category_id):
 # Edit an Item in the Category
 @app.route('/categories/<int:category_id>/items/<int:item_id>/edit', methods=['GET', 'POST'])
 def editListItem(category_id, item_id):
+    """Edits an existing item in a category."""
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -471,6 +505,8 @@ def editListItem(category_id, item_id):
 # Delete an Item in the Category
 @app.route('/categories/<int:category_id>/items/<int:item_id>/delete', methods=['GET', 'POST'])
 def deleteListItem(category_id, item_id):
+    """Deletes an existing item in a category."""
+
     if 'username' not in login_session:
         return redirect('/login')
 
@@ -497,6 +533,8 @@ def deleteListItem(category_id, item_id):
 # Show Login page
 @app.route('/login')
 def showLogin():
+    """Shows login page."""
+
     if 'provider' in login_session:
         print "already logged in"
         flash("You are already logged in, logout first in order to re-login.")
@@ -510,6 +548,8 @@ def showLogin():
 # Logout user page
 @app.route('/logout')
 def disconnect():
+    """Handles Logout based on which provider is logged in."""
+
     if 'provider' in login_session:
         if login_session['provider'] == 'google':
             gdisconnect()

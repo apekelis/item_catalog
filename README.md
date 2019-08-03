@@ -31,6 +31,10 @@ This will give you a directory named **catalog** complete with the source code f
 
 Using the terminal, change directory to catalog (**cd catalog**), then type **vagrant up** to launch your virtual machine.
 
+After that you can check if all the required packages and dependencies are installed for this project in the Virtual machine by using the **requirements.txt** file:
+
+	pip  install  -r  requirements.txt
+
 
 ## Running the Item Catalog App
 Once it is up and running, type **vagrant ssh**. This will log your terminal into the virtual machine, and you'll get a Linux shell prompt. When you want to log out, type **exit** at the shell prompt.  To turn the virtual machine off (without deleting anything), type **vagrant halt**. If you do this, you'll need to run **vagrant up** again before you can log into it.
