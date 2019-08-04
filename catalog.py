@@ -20,12 +20,11 @@ from oauth2client.client import FlowExchangeError
 
 app = Flask(__name__)
 
-GO_CLIENT_ID = json.loads(
-    open('go_client_secrets.json', 'r').read())['web']['client_id']
+GO_CLIENT_ID = json.loads(open('go_client_secrets.json',
+                               'r').read())['web']['client_id']
 
-FB_CLIENT_ID = json.loads(open('fb_client_secrets.json', 'r').read())[
-    'web']['app_id']
-
+FB_CLIENT_ID = json.loads(open('fb_client_secrets.json',
+                               'r').read())['web']['app_id']
 
 # Connect to Database and create database session
 engine = create_engine('sqlite:///itemcatalog.db')
@@ -46,8 +45,8 @@ def fbconnect():
     access_token = request.data
     print "access token received %s " % access_token
     app_id = FB_CLIENT_ID
-    app_secret = json.loads(
-        open('fb_client_secrets.json', 'r').read())['web']['app_secret']
+    app_secret = json.loads(open('fb_client_secrets.json',
+                                 'r').read())['web']['app_secret']
     url = 'https://graph.facebook.com/oauth/access_token?'
     url += 'grant_type=fb_exchange_token&client_id=%s&' % (app_id)
     url += 'client_secret=%s&fb_exchange_token=%s' % (app_secret, access_token)
@@ -119,13 +118,13 @@ def gconnect():
     try:
 
         # Upgrade the authorization code into a credentials object
-        oauth_flow = flow_from_clientsecrets(
-            'go_client_secrets.json', scope='')
+        oauth_flow = flow_from_clientsecrets('go_client_secrets.json',
+                                             scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps(
-            'Failed to upgrade the authorization code.'), 401)
+        response = make_response(
+            json.dumps('Failed to upgrade the authorization code.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -161,8 +160,8 @@ def gconnect():
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+            json.dumps('Current user is already connected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -197,7 +196,8 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;'
+    output += '-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
     flash("you are now logged in as %s" % login_session['username'])
     print "done!"
 
@@ -207,8 +207,9 @@ def gconnect():
 def createUser(login_session):
     """Creates a user in the database, with the "login_session" information."""
 
-    newUser = User(name=login_session['username'], email=login_session[
-                   'email'], picture=login_session['picture'])
+    newUser = User(name=login_session['username'],
+                   email=login_session['email'],
+                   picture=login_session['picture'])
     session.add(newUser)
     session.commit()
     user = session.query(User).filter_by(email=login_session['email']).one()
@@ -241,8 +242,8 @@ def fbdisconnect():
     access_token = login_session['access_token']
     # Only disconnect a connected user.
     if access_token is None:
-        response = make_response(
-            json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('Current user not connected.'),
+                                 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     if login_session['provider'] == 'google':
@@ -263,8 +264,8 @@ def gdisconnect():
     # Only disconnect a connected user.
     access_token = login_session.get('access_token')
     if access_token is None:
-        response = make_response(
-            json.dumps('Current user not connected.'), 401)
+        response = make_response(json.dumps('Current user not connected.'),
+                                 401)
         response.headers['Content-Type'] = 'application/json'
         return response
     if login_session['provider'] == 'facebook':
@@ -279,8 +280,8 @@ def gdisconnect():
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        response = make_response(json.dumps(
-            'Failed to revoke token for given user.', 400))
+        response = make_response(
+            json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -296,10 +297,11 @@ def categoryItemsJSON(category_id):
             category_id=category_id).all()
         return jsonify(ListItems=[i.serialize for i in items])
     except Exception as e:
-        return '''There was a problem with your query %s, please Verify, Redirecting to main page...
-            <script> setTimeout(function() {
-                  window.location.href = "/";
-                 }, 2000);
+        return '''There was a problem with your query %s, please Verify,
+            Redirecting to main page...
+                <script> setTimeout(function() {
+                        window.location.href = "/";
+                            }, 2000);
                  </script> ''' % (str(e))
 
 
@@ -312,10 +314,11 @@ def listItemJSON(category_id, item_id):
             id=item_id, category_id=category_id).one()
         return jsonify(List_Item=List_Item.serialize)
     except Exception as e:
-        return '''There was a problem with your query %s, please Verify, Redirecting to main page...
-            <script> setTimeout(function() {
-                  window.location.href = "/";
-                 }, 2000);
+        return '''There was a problem with your query %s, please Verify,
+            Redirecting to main page...
+                <script> setTimeout(function() {
+                        window.location.href = "/";
+                            }, 2000);
                  </script> ''' % (str(e))
 
 
@@ -327,10 +330,11 @@ def categoriesJSON():
         categories = session.query(Category).all()
         return jsonify(categories=[r.serialize for r in categories])
     except Exception as e:
-        return '''There was a problem with your query %s, please Verify, Redirecting to main page...
-            <script> setTimeout(function() {
-                  window.location.href = "/";
-                 }, 2000);
+        return '''There was a problem with your query %s, please Verify,
+            Redirecting to main page...
+                <script> setTimeout(function() {
+                        window.location.href = "/";
+                            }, 2000);
                  </script> ''' % (str(e))
 
 
@@ -342,7 +346,8 @@ def showCategories():
 
     categories = session.query(Category).order_by(asc(Category.name))
     if 'user_id' in login_session:
-        return render_template('categories.html', categories=categories,
+        return render_template('categories.html',
+                               categories=categories,
                                user=getUserInfo(login_session['user_id']))
     else:
         return render_template('pubcategories.html', categories=categories)
@@ -357,8 +362,8 @@ def newCategory():
         return redirect('/login')
     if request.method == 'POST':
         if "btn_new" in request.form:
-            newCategory = Category(
-                name=request.form['name'], user_id=login_session['user_id'])
+            newCategory = Category(name=request.form['name'],
+                                   user_id=login_session['user_id'])
             session.add(newCategory)
             flash('New Category %s Successfully Created' % newCategory.name)
             session.commit()
@@ -366,7 +371,8 @@ def newCategory():
         else:
             return redirect(url_for('showCategories'))
     else:
-        return render_template('newCategory.html', user=getUserInfo(login_session['user_id']))
+        return render_template('newCategory.html',
+                               user=getUserInfo(login_session['user_id']))
 
 
 # Edit a category
@@ -395,7 +401,9 @@ def editCategory(category_id):
             else:
                 return redirect(url_for('showCategories'))
         else:
-            return render_template('editCategory.html', category=editedCategory, user=getUserInfo(login_session['user_id']))
+            return render_template('editCategory.html',
+                                   category=editedCategory,
+                                   user=getUserInfo(login_session['user_id']))
 
 
 # Delete a category
@@ -421,7 +429,9 @@ def deleteCategory(category_id):
             else:
                 return redirect(url_for('showCategories'))
         else:
-            return render_template('deleteCategory.html', category=categoryToDelete, user=getUserInfo(login_session['user_id']))
+            return render_template('deleteCategory.html',
+                                   category=categoryToDelete,
+                                   user=getUserInfo(login_session['user_id']))
 
 
 # Show Items page
@@ -435,11 +445,21 @@ def showItems(category_id):
     creator = getUserInfo(category.user_id)
     if 'user_id' in login_session:
         if category.user_id != login_session['user_id']:
-            return render_template('pubitems.html', items=items, category=category, creator=creator, user=getUserInfo(login_session['user_id']))
+            return render_template('pubitems.html',
+                                   items=items,
+                                   category=category,
+                                   creator=creator,
+                                   user=getUserInfo(login_session['user_id']))
         else:
-            return render_template('items.html', items=items, category=category, user=getUserInfo(login_session['user_id']))
+            return render_template('items.html',
+                                   items=items,
+                                   category=category,
+                                   user=getUserInfo(login_session['user_id']))
     else:
-        return render_template('pubitems.html', items=items, category=category, creator=creator)
+        return render_template('pubitems.html',
+                               items=items,
+                               category=category,
+                               creator=creator)
 
 
 # Create New Item in the Category
@@ -458,8 +478,10 @@ def newListItem(category_id):
         return redirect(url_for('showItems', category_id=category.id))
     if request.method == 'POST':
         if "btn_new" in request.form:
-            newItem = ListItem(name=request.form['name'], description=request.form['description'],
-                               category_id=category_id, user_id=login_session['user_id'])
+            newItem = ListItem(name=request.form['name'],
+                               description=request.form['description'],
+                               category_id=category_id,
+                               user_id=login_session['user_id'])
             session.add(newItem)
             session.commit()
             flash('New Catalog Item: %s Successfully Created' % (newItem.name))
@@ -467,11 +489,14 @@ def newListItem(category_id):
         else:
             return redirect(url_for('showItems', category_id=category_id))
     else:
-        return render_template('newitem.html', category_id=category_id, user=getUserInfo(login_session['user_id']))
+        return render_template('newitem.html',
+                               category_id=category_id,
+                               user=getUserInfo(login_session['user_id']))
 
 
 # Edit an Item in the Category
-@app.route('/categories/<int:category_id>/items/<int:item_id>/edit', methods=['GET', 'POST'])
+@app.route('/categories/<int:category_id>/items/<int:item_id>/edit',
+           methods=['GET', 'POST'])
 def editListItem(category_id, item_id):
     """Edits an existing item in a category."""
 
@@ -499,11 +524,14 @@ def editListItem(category_id, item_id):
         else:
             return redirect(url_for('showItems', category_id=category_id))
     else:
-        return render_template('edititem.html', item=editedItem, user=getUserInfo(login_session['user_id']))
+        return render_template('edititem.html',
+                               item=editedItem,
+                               user=getUserInfo(login_session['user_id']))
 
 
 # Delete an Item in the Category
-@app.route('/categories/<int:category_id>/items/<int:item_id>/delete', methods=['GET', 'POST'])
+@app.route('/categories/<int:category_id>/items/<int:item_id>/delete',
+           methods=['GET', 'POST'])
 def deleteListItem(category_id, item_id):
     """Deletes an existing item in a category."""
 
@@ -527,7 +555,9 @@ def deleteListItem(category_id, item_id):
         else:
             return redirect(url_for('showItems', category_id=category_id))
     else:
-        return render_template('deleteitem.html', item=itemToDelete, user=getUserInfo(login_session['user_id']))
+        return render_template('deleteitem.html',
+                               item=itemToDelete,
+                               user=getUserInfo(login_session['user_id']))
 
 
 # Show Login page
@@ -539,8 +569,9 @@ def showLogin():
         print "already logged in"
         flash("You are already logged in, logout first in order to re-login.")
         return redirect(url_for('showCategories'))
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
-                    for x in xrange(32))
+    state = ''.join(
+        random.choice(string.ascii_uppercase + string.digits)
+        for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
@@ -573,7 +604,6 @@ def disconnect():
 # Code to prevent users from entering a page without logging in
 # if 'username' not in login_session:
 #     return redirect('/login')
-
 
 # Start web-server using a non-threaded server because otherwise i had
 # problems with SQLite
